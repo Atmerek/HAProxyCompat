@@ -1,8 +1,8 @@
-name: Release
+name: Release (26.1.x)
 
 on:
   push:
-    tags: [ 'v*' ]
+    tags: [ 'v*-26.1' ]
 
 permissions:
   contents: write
@@ -23,13 +23,18 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build
-        run: ./gradlew build --no-daemon --stacktrace
+        run: ./gradlew :neoforge-26.1:build --no-daemon --stacktrace
 
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ github.ref_name }}" build/libs/*.jar \
+          gh release create "${{ github.ref_name }}" neoforge-26.1/build/libs/*.jar \
             --title "${{ github.ref_name }}" \
             --generate-notes \
-            || gh release upload "${{ github.ref_name }}" build/libs/*.jar --clobber
+            || gh release upload "${{ github.ref_name }}" neoforge-26.1/build/libs/*.jar --clobber
+
+      - name: Publish to Modrinth
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: ./gradlew :neoforge-26.1:modrinth --no-daemon

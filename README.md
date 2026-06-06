@@ -16,14 +16,16 @@ extra setup for players.
 > server just looks offline in the client. Installing HAProxyCompat is what makes the connection work
 > at all. The real-IP part is the bonus.
 
-- **For:** NeoForge, any 1.21.x from 1.21 through 1.21.11, dedicated servers only (one jar covers
-  them all; NeoForge has no builds for 1.21.2, 1.21.6, 1.21.7, or 1.21.9, so those don't exist)
+- **For:** NeoForge dedicated servers. One jar covers **1.21 through 1.21.11**, another covers
+  **26.1.x** (Minecraft's new calendar-versioned family). Pick the one that matches your server.
 - **Needs:** NeoForge. Nothing else. The one Netty piece Minecraft doesn't ship is tucked inside the
   jar for you, so it stays a single drop-in file.
 
 ## Quick start
 
-1. Drop `haproxycompat-1.0.0.jar` into your server's `mods/` folder.
+1. Drop the right jar into your server's `mods/` folder:
+   - `haproxycompat-1.21-1.0.0.jar` for MC 1.21 through 1.21.11
+   - `haproxycompat-26.1-1.0.0.jar` for MC 26.1.x
 2. Tell your proxy to send the PROXY header (see [Point your proxy at it](#point-your-proxy-at-it)).
 3. If your proxy runs on a different machine, add its IP to `trusted_proxies` (see below).
 4. Start the server. Done.
@@ -87,13 +89,14 @@ HAProxyCompat only listens. Your proxy still has to be told to **send** the head
 
 ## Build from source
 
-You need JDK 21. From the project root:
+You need JDK 21 for the 1.21.x build, JDK 25 for 26.1.x (Gradle downloads the right one automatically via toolchains). From the project root:
 
 ```bat
-gradlew.bat build
+gradlew.bat :neoforge-1.21:build
+gradlew.bat :neoforge-26.1:build
 ```
 
-Your jar lands in `build/libs/haproxycompat-1.0.0.jar`.
+Jars land in `neoforge-1.21/build/libs/haproxycompat-1.21-1.0.0.jar` and `neoforge-26.1/build/libs/haproxycompat-26.1-1.0.0.jar`.
 
 ## Under the hood
 
