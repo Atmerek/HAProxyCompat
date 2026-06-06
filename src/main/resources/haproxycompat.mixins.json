@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "xyz.atmerek.haproxycompat.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [],
+  "server": [
+    "ServerConnectionListenerMixin",
+    "ConnectionMixin"
+  ],
+  "mixins": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

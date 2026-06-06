@@ -1,0 +1,12 @@
+# Normalize text files to LF in the repo, check out native on each platform.
+* text=auto
+
+# Scripts that must keep a specific line ending regardless of platform.
+gradlew     text eol=lf
+*.sh        text eol=lf
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+
+# Treat these as binary (never line-ending-converted).
+*.jar       binary
+*.png       binary
