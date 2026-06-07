@@ -29,10 +29,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ github.ref_name }}" versions/neoforge-1.21/build/libs/*.jar \
-            --title "${{ github.ref_name }}" \
+          TAG="${{ github.ref_name }}"
+          JAR=$(ls versions/neoforge-1.21/build/libs/*.jar | grep -v '\-dev\.' | grep -v '\-sources\.' | head -1)
+          gh release create "$TAG" "$JAR" \
+            --title "$TAG" \
             --generate-notes \
-            || gh release upload "${{ github.ref_name }}" versions/neoforge-1.21/build/libs/*.jar --clobber
+            || gh release upload "$TAG" "$JAR" --clobber
 
       - name: Publish to Modrinth
         env:

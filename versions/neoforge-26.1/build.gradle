@@ -94,7 +94,8 @@ neoForge.ideSyncTask generateModMetadata
 modrinth {
     token = System.getenv("MODRINTH_TOKEN")
     projectId = "haproxycompat"
-    versionNumber = project.version
+    versionNumber = "${project.version}+${mod_loader}-${mc_label}"
+    versionName = project.version
     versionType = "release"
     uploadFile = jar
     gameVersions = ["26.1", "26.1.1", "26.1.2"]
