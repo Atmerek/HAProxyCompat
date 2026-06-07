@@ -53,6 +53,7 @@ running and they apply instantly, no restart needed.
     require_proxy_protocol = true
     trusted_proxies = ["127.0.0.1/32", "::1/128"]
     log_connections = false
+    kick_message = "This server requires a proxy connection."
 ```
 
 ```json
@@ -61,7 +62,8 @@ running and they apply instantly, no restart needed.
   "enabled": true,
   "requireProxyProtocol": true,
   "trustedProxies": ["127.0.0.1/32", "::1/128"],
-  "logConnections": false
+  "logConnections": false,
+  "kickMessage": "This server requires a proxy connection."
 }
 ```
 
@@ -74,6 +76,7 @@ running and they apply instantly, no restart needed.
 - **trusted\_proxies** — IP addresses / CIDR ranges that may send PROXY headers. Only these are
   believed; anyone else sending a PROXY header is dropped. Add your proxy's address here.
 - **log\_connections** — print one line per connection decision. Great for debugging, noisy once working.
+- **kick\_message** — message shown in the disconnect screen when a client connects directly and `require_proxy_protocol` is true. Without this, clients would hang until a read timeout fires.
 
 ### Why `trusted_proxies` matters
 

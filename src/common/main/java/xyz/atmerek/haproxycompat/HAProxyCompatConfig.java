@@ -21,6 +21,7 @@ public final class HAProxyCompatConfig {
     public static Value<Boolean> ENABLED;
     public static Value<Boolean> REQUIRE_PROXY_PROTOCOL;
     public static Value<Boolean> LOG_CONNECTIONS;
+    public static Value<String> KICK_MESSAGE;
     private static Supplier<List<String>> trustedProxiesSupplier;
 
     // Parsed CIDRs, rebuilt only when the raw list changes.
@@ -31,11 +32,13 @@ public final class HAProxyCompatConfig {
             final Value<Boolean> enabled,
             final Value<Boolean> requireProxyProtocol,
             final Value<Boolean> logConnections,
-            final Supplier<List<String>> trustedProxies) {
+            final Supplier<List<String>> trustedProxies,
+            final Value<String> kickMessage) {
         ENABLED = enabled;
         REQUIRE_PROXY_PROTOCOL = requireProxyProtocol;
         LOG_CONNECTIONS = logConnections;
         trustedProxiesSupplier = trustedProxies;
+        KICK_MESSAGE = kickMessage;
     }
 
     public static List<CidrRange> trustedProxies() {

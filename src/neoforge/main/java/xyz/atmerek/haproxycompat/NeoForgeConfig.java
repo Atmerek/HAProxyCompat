@@ -11,6 +11,7 @@ public final class NeoForgeConfig {
     public static final ModConfigSpec.BooleanValue REQUIRE_PROXY_PROTOCOL;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> TRUSTED_PROXIES;
     public static final ModConfigSpec.BooleanValue LOG_CONNECTIONS;
+    public static final ModConfigSpec.ConfigValue<String> KICK_MESSAGE;
 
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -50,6 +51,12 @@ public final class NeoForgeConfig {
                         "Log a line for each connection decision (proxied / direct / rejected). Useful for",
                         "diagnosing reverse-proxy configuration, but noisy on busy servers.")
                 .define("log_connections", false);
+
+        KICK_MESSAGE = builder
+                .comment(
+                        "Message shown to clients that connect directly when require_proxy_protocol is true.",
+                        "They will see this in the disconnect screen instead of hanging until timeout.")
+                .define("kick_message", "This server requires a proxy connection.");
 
         builder.pop();
         SPEC = builder.build();

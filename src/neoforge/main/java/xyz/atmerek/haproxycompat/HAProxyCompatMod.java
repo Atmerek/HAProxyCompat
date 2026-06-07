@@ -22,7 +22,8 @@ public final class HAProxyCompatMod {
                 NeoForgeConfig.ENABLED::get,
                 NeoForgeConfig.REQUIRE_PROXY_PROTOCOL::get,
                 NeoForgeConfig.LOG_CONNECTIONS::get,
-                () -> new ArrayList<>(NeoForgeConfig.TRUSTED_PROXIES.get())
+                () -> new ArrayList<>(NeoForgeConfig.TRUSTED_PROXIES.get()),
+                NeoForgeConfig.KICK_MESSAGE::get
         );
         modEventBus.addListener(this::onCommonSetup);
         HAProxyCompatConfig.LOGGER.info("HAProxyCompat loaded (dedicated server). PROXY protocol v1/v2 support is ready.");

@@ -17,6 +17,7 @@ public final class FabricConfig {
     public boolean requireProxyProtocol = true;
     public List<String> trustedProxies = List.of("127.0.0.1/32", "::1/128");
     public boolean logConnections = false;
+    public String kickMessage = "This server requires a proxy connection.";
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 

@@ -16,7 +16,8 @@ public final class HAProxyCompatMod implements DedicatedServerModInitializer {
                 () -> config.enabled,
                 () -> config.requireProxyProtocol,
                 () -> config.logConnections,
-                () -> config.trustedProxies
+                () -> config.trustedProxies,
+                () -> config.kickMessage
         );
 
         HAProxyCompatConfig.LOGGER.info("HAProxyCompat loaded (dedicated server). PROXY protocol v1/v2 support is ready.");

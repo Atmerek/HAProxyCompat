@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
+import io.netty.util.AttributeKey;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -12,7 +13,11 @@ import java.util.List;
 
 // First handler in the pipeline. Detects a PROXY header on the first bytes, checks the peer is a
 // trusted proxy, then either decodes it, drops the connection, or passes through to vanilla.
+// When require_proxy_protocol is true and no header is present, marks the channel with KICK_REASON
+// so ServerLoginPacketListenerMixin can send LoginDisconnect via Minecraft's own mechanism.
 public final class ProxyProtocolDetector extends ByteToMessageDecoder {
+
+    public static final AttributeKey<String> KICK_REASON = AttributeKey.valueOf("haproxycompat:kick_reason");
 
     static final String DECODER_NAME = "haproxycompat:haproxy_decoder";
     static final String APPLIER_NAME = "haproxycompat:proxy_apply";
@@ -57,7 +62,10 @@ public final class ProxyProtocolDetector extends ByteToMessageDecoder {
                 HAProxyCompatConfig.LOGGER.warn(
                         "Rejecting connection from {} (no PROXY header; require_proxy_protocol=true)", peer);
             }
-            drop(ctx, in);
+            // Mark the channel so the login mixin can kick with the configured message. Then pass
+            // through: status pings reach vanilla's status handler, login triggers the mixin.
+            ctx.channel().attr(KICK_REASON).set(HAProxyCompatConfig.KICK_MESSAGE.get());
+            ctx.pipeline().remove(this);
             return;
         }
         if (log) {

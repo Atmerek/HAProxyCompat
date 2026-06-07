@@ -6,7 +6,9 @@
   "client": [],
   "server": [
     "ServerConnectionListenerMixin",
-    "ConnectionMixin"
+    "ConnectionMixin",
+    "ServerLoginPacketListenerMixin",
+    "ServerStatusPacketListenerMixin"
   ],
   "mixins": [],
   "injectors": {
