@@ -11,18 +11,24 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        subproject:
-          - neoforge-1.21
-          - neoforge-26.1
+        include:
+          - subproject: neoforge-1.21
+            java-version: '21'
+          - subproject: neoforge-26.1
+            java-version: '21'
+          - subproject: fabric-1.21
+            java-version: '21'
+          - subproject: fabric-26.1
+            java-version: '25'
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up JDK ${{ matrix.java-version }}
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: ${{ matrix.java-version }}
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -34,5 +40,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: haproxycompat-${{ matrix.subproject }}
-          path: ${{ matrix.subproject }}/build/libs/*.jar
+          path: versions/${{ matrix.subproject }}/build/libs/*.jar
           if-no-files-found: error

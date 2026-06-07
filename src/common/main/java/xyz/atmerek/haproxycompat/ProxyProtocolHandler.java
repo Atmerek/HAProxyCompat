@@ -32,7 +32,7 @@ public final class ProxyProtocolHandler extends ChannelInboundHandlerAdapter {
                 if (proxy.command() == HAProxyCommand.LOCAL || source == null) {
                     // Health check / no client address: leave the connection as-is.
                     if (logConnections) {
-                        HAProxyCompatMod.LOGGER.info(
+                        HAProxyCompatConfig.LOGGER.info(
                                 "PROXY LOCAL/health-check from {} (no client address applied)",
                                 ctx.channel().remoteAddress());
                     }
@@ -41,7 +41,7 @@ public final class ProxyProtocolHandler extends ChannelInboundHandlerAdapter {
                     ctx.channel().attr(REAL_ADDRESS).set(realAddress);
                     applyToConnection(ctx, realAddress);
                     if (logConnections) {
-                        HAProxyCompatMod.LOGGER.info("PROXY {} -> real client {}",
+                        HAProxyCompatConfig.LOGGER.info("PROXY {} -> real client {}",
                                 ctx.channel().remoteAddress(), realAddress);
                     }
                 }

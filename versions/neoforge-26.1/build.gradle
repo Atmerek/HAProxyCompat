@@ -9,7 +9,7 @@ version = mod_version
 group = mod_group_id
 
 base {
-    archivesName = "${mod_id}-${mc_label}"
+    archivesName = "${mod_id}-${mod_loader}-${mc_label}"
 }
 
 java {
@@ -20,8 +20,18 @@ java {
 
 sourceSets {
     main {
-        java      { srcDirs = [rootProject.file('src/main/java')] }
-        resources { srcDirs = [rootProject.file('src/main/resources')] }
+        java {
+            srcDirs = [
+                rootProject.file('src/common/main/java'),
+                rootProject.file('src/neoforge/main/java')
+            ]
+        }
+        resources {
+            srcDirs = [
+                rootProject.file('src/common/main/resources'),
+                rootProject.file('src/neoforge/main/resources')
+            ]
+        }
     }
 }
 
@@ -74,7 +84,7 @@ var generateModMetadata = tasks.register('generateModMetadata', ProcessResources
     ]
     inputs.properties replaceProperties
     expand replaceProperties
-    from rootProject.file('src/main/templates')
+    from rootProject.file('src/neoforge/main/templates')
     into "${layout.buildDirectory.get()}/generated/sources/modMetadata"
 }
 

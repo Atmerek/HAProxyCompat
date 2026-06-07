@@ -38,7 +38,7 @@ public final class ProxyProtocolDetector extends ByteToMessageDecoder {
         if (detection == Detection.PRESENT) {
             if (!isTrusted(peer)) {
                 if (log) {
-                    HAProxyCompatMod.LOGGER.warn("Rejecting PROXY header from untrusted source {}", peer);
+                    HAProxyCompatConfig.LOGGER.warn("Rejecting PROXY header from untrusted source {}", peer);
                 }
                 drop(ctx, in);
                 return;
@@ -54,14 +54,14 @@ public final class ProxyProtocolDetector extends ByteToMessageDecoder {
         // No header.
         if (requireProxy) {
             if (log) {
-                HAProxyCompatMod.LOGGER.warn(
+                HAProxyCompatConfig.LOGGER.warn(
                         "Rejecting connection from {} (no PROXY header; require_proxy_protocol=true)", peer);
             }
             drop(ctx, in);
             return;
         }
         if (log) {
-            HAProxyCompatMod.LOGGER.info("Direct connection from {} (no PROXY header)", peer);
+            HAProxyCompatConfig.LOGGER.info("Direct connection from {} (no PROXY header)", peer);
         }
         ctx.pipeline().remove(this);
     }

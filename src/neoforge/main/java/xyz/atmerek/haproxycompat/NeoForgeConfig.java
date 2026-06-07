@@ -2,22 +2,15 @@ package xyz.atmerek.haproxycompat;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 
-import java.net.InetAddress;
-import java.util.ArrayList;
 import java.util.List;
 
-// Mod config. The .comment(...) strings below are shown to users in the generated TOML.
-public final class HAProxyCompatConfig {
+public final class NeoForgeConfig {
 
     public static final ModConfigSpec SPEC;
     public static final ModConfigSpec.BooleanValue ENABLED;
     public static final ModConfigSpec.BooleanValue REQUIRE_PROXY_PROTOCOL;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> TRUSTED_PROXIES;
     public static final ModConfigSpec.BooleanValue LOG_CONNECTIONS;
-
-    // Parsed CIDRs, rebuilt only when the raw config list changes.
-    private static volatile List<String> cachedRaw;
-    private static volatile List<CidrRange> cachedParsed = List.of();
 
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -50,7 +43,7 @@ public final class HAProxyCompatConfig {
                         "trusted_proxies",
                         List.of("127.0.0.1/32", "::1/128"),
                         () -> "127.0.0.1/32",
-                        HAProxyCompatConfig::isValidCidr);
+                        NeoForgeConfig::isValidCidr);
 
         LOG_CONNECTIONS = builder
                 .comment(
@@ -74,38 +67,5 @@ public final class HAProxyCompatConfig {
         }
     }
 
-    // Trusted-proxy ranges, parsed lazily and cached. Cheap to call per connection.
-    public static List<CidrRange> trustedProxies() {
-        final List<String> raw = new ArrayList<>(TRUSTED_PROXIES.get());
-        if (raw.equals(cachedRaw)) {
-            return cachedParsed;
-        }
-        final List<CidrRange> parsed = new ArrayList<>(raw.size());
-        for (final String entry : raw) {
-            try {
-                parsed.add(CidrRange.parse(entry));
-            } catch (final IllegalArgumentException e) {
-                HAProxyCompatMod.LOGGER.warn("Ignoring invalid trusted_proxies entry '{}': {}", entry, e.getMessage());
-            }
-        }
-        cachedRaw = raw;
-        cachedParsed = List.copyOf(parsed);
-        return cachedParsed;
-    }
-
-    // True if the address is within any configured trusted-proxy range.
-    public static boolean isTrusted(final InetAddress address) {
-        if (address == null) {
-            return false;
-        }
-        for (final CidrRange range : trustedProxies()) {
-            if (range.contains(address)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private HAProxyCompatConfig() {
-    }
+    private NeoForgeConfig() {}
 }

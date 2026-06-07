@@ -1,0 +1,78 @@
+plugins {
+    id 'java'
+    id 'fabric-loom' version '1.17.1'
+    id 'com.modrinth.minotaur' version '2.9.0'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = "${mod_id}-${mod_loader}-${mc_label}"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    maven { url = 'https://maven.fabricmc.net/' }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = [
+                rootProject.file('src/common/main/java'),
+                rootProject.file('src/fabric/main/java')
+            ]
+        }
+        resources {
+            srcDirs = [
+                rootProject.file('src/common/main/resources'),
+                rootProject.file('src/fabric/main/resources')
+            ]
+        }
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    include(implementation("io.netty:netty-codec-haproxy:${netty_version}"))
+}
+
+processResources {
+    var replaceProperties = [
+        mod_id                     : mod_id,
+        mod_version                : mod_version,
+        mod_name                   : mod_name,
+        mod_license                : mod_license,
+        mod_authors                : mod_authors,
+        mod_description            : mod_description,
+        fabric_loader_version_range: fabric_loader_version_range,
+        fabric_minecraft_range     : fabric_minecraft_range
+    ]
+    inputs.properties replaceProperties
+    filesMatching('fabric.mod.json') {
+        expand replaceProperties
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = "haproxycompat"
+    versionNumber = project.version
+    versionType = "release"
+    uploadFile = remapJar
+    gameVersions = ["1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4", "1.21.5", "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11"]
+    loaders = ["fabric"]
+}

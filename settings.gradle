@@ -3,6 +3,7 @@ pluginManagement {
         mavenLocal()
         gradlePluginPortal()
         maven { url = 'https://maven.neoforged.net/releases' }
+        maven { url = 'https://maven.fabricmc.net/' }
     }
 }
 
@@ -13,4 +14,21 @@ plugins {
 rootProject.name = 'HAProxyCompat'
 
 include 'neoforge-1.21'
+project(':neoforge-1.21').projectDir = file('versions/neoforge-1.21')
+
 include 'neoforge-26.1'
+project(':neoforge-26.1').projectDir = file('versions/neoforge-26.1')
+
+include 'fabric-1.21'
+project(':fabric-1.21').projectDir = file('versions/fabric-1.21')
+
+// fabric-26.1 uses MC 26.1.2 which requires the Gradle JVM to be JDK 25+ (Loom checks at config
+// time). Only register it when the current JVM meets that requirement so that NeoForge / fabric-1.21
+// builds remain usable on JDK 21 machines.
+def javaVersion = Integer.parseInt(JavaVersion.current().getMajorVersion())
+if (javaVersion >= 25) {
+    include 'fabric-26.1'
+    project(':fabric-26.1').projectDir = file('versions/fabric-26.1')
+} else {
+    logger.lifecycle("NOTE: fabric-26.1 skipped — JDK 25+ required (current JDK: ${javaVersion}). Run with JDK 25 to build it.")
+}

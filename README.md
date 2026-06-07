@@ -16,16 +16,22 @@ extra setup for players.
 > server just looks offline in the client. Installing HAProxyCompat is what makes the connection work
 > at all. The real-IP part is the bonus.
 
-- **For:** NeoForge dedicated servers. One jar covers **1.21 through 1.21.11**, another covers
-  **26.1.x** (Minecraft's new calendar-versioned family). Pick the one that matches your server.
-- **Needs:** NeoForge. Nothing else. The one Netty piece Minecraft doesn't ship is tucked inside the
-  jar for you, so it stays a single drop-in file.
+- **For:** NeoForge and Fabric dedicated servers. Pick the jar that matches your loader and MC version.
+- **Needs:** Nothing else. The one Netty piece Minecraft doesn't ship is tucked inside the jar for
+  you, so it stays a single drop-in file.
+
+## Pick the right jar
+
+| File | Loader | MC versions |
+|---|---|---|
+| `haproxycompat-neoforge-1.21-1.0.0.jar` | NeoForge | 1.21 – 1.21.11 |
+| `haproxycompat-neoforge-26.1-1.0.0.jar` | NeoForge | 26.1.x |
+| `haproxycompat-fabric-1.21-1.0.0.jar` | Fabric | 1.21 – 1.21.11 |
+| `haproxycompat-fabric-26.1-1.0.0.jar` | Fabric | 26.1.x |
 
 ## Quick start
 
-1. Drop the right jar into your server's `mods/` folder:
-   - `haproxycompat-1.21-1.0.0.jar` for MC 1.21 through 1.21.11
-   - `haproxycompat-26.1-1.0.0.jar` for MC 26.1.x
+1. Drop the right jar into your server's `mods/` folder.
 2. Tell your proxy to send the PROXY header (see [Point your proxy at it](#point-your-proxy-at-it)).
 3. If your proxy runs on a different machine, add its IP to `trusted_proxies` (see below).
 4. Start the server. Done.
@@ -35,43 +41,51 @@ that needs zero config.
 
 ## Configure it
 
-Settings live in `config/haproxycompat-common.toml`. Edit them while the server is running and they
-apply instantly, no restart needed.
+**NeoForge** — settings live in `config/haproxycompat-common.toml`. Edit them while the server is
+running and they apply instantly, no restart needed.
+
+**Fabric** — settings live in `config/haproxycompat.json`. Restart required for changes to take effect.
 
 ```toml
+# NeoForge (haproxycompat-common.toml)
 [general]
-    # The on/off switch.
     enabled = true
-
-    # true:  only let in connections that carry a valid PROXY header from a trusted proxy.
-    #        Use this when the only way in is through your proxy.
-    # false: also allow plain direct connections through untouched.
-    #        Use this to mix proxied and direct players on the same port.
     require_proxy_protocol = true
-
-    # The guest list. Only these addresses are allowed to claim a real client IP.
-    # Add your proxy's address here. Works with IPv4 and IPv6, single IPs or CIDR ranges.
     trusted_proxies = ["127.0.0.1/32", "::1/128"]
-
-    # Flip this on to print one line per connection (proxied, direct, or rejected).
-    # Great for figuring out why something isn't working, noisy once it is.
     log_connections = false
 ```
 
-### Why `trusted_proxies` matters
+```json
+// Fabric (haproxycompat.json)
+{
+  "enabled": true,
+  "requireProxyProtocol": true,
+  "trustedProxies": ["127.0.0.1/32", "::1/128"],
+  "logConnections": false
+}
+```
 
-This is the important one, so read this bit.
+### Settings
+
+- **enabled** — master on/off switch.
+- **require\_proxy\_protocol** — `true`: only allow connections with a valid PROXY header from a
+  trusted proxy. Use when the Minecraft port is reachable only through your proxy. `false`: also
+  allow plain direct connections through untouched.
+- **trusted\_proxies** — IP addresses / CIDR ranges that may send PROXY headers. Only these are
+  believed; anyone else sending a PROXY header is dropped. Add your proxy's address here.
+- **log\_connections** — print one line per connection decision. Great for debugging, noisy once working.
+
+### Why `trusted_proxies` matters
 
 The PROXY header is just text the connecting side sends. Anyone who can reach your server port
 directly could send a fake one and claim to be any IP they like, which would let them dodge bans or
 frame someone else. To stop that, HAProxyCompat only believes the header when it comes from an
 address you've listed in `trusted_proxies`. Everyone else is ignored or dropped.
 
-So two simple rules:
+Two simple rules:
 
 1. **Add your proxy's real address.** The default list only trusts the local machine. If your proxy
-   lives on another host or subnet, its headers get rejected until you add its IP or CIDR here. The
-   giveaway: players still show the proxy's IP after installing the mod.
+   lives on another host or subnet, its headers get rejected until you add its IP or CIDR here.
 2. **Lock the door behind the proxy.** Firewall the Minecraft port so only your proxy can reach it.
    That way a forged header can never arrive in the first place.
 
@@ -89,18 +103,20 @@ HAProxyCompat only listens. Your proxy still has to be told to **send** the head
 
 ## Build from source
 
-You need JDK 21 for the 1.21.x build, JDK 25 for 26.1.x (Gradle downloads the right one automatically via toolchains). From the project root:
+You need JDK 21 for 1.21.x builds, JDK 25 for 26.1.x (Gradle downloads the right one automatically
+via toolchains for the NeoForge builds; Fabric 26.1 requires JDK 25 to run Gradle itself).
 
 ```bat
 gradlew.bat :neoforge-1.21:build
 gradlew.bat :neoforge-26.1:build
+gradlew.bat :fabric-1.21:build
+:: Requires JDK 25:
+gradlew.bat :fabric-26.1:build
 ```
 
-Jars land in `neoforge-1.21/build/libs/haproxycompat-1.21-1.0.0.jar` and `neoforge-26.1/build/libs/haproxycompat-26.1-1.0.0.jar`.
+Jars land in `versions/<subproject>/build/libs/`.
 
 ## Under the hood
-
-Curious how it works? Here's the short version.
 
 Every new connection first meets a small gatekeeper (`ProxyProtocolDetector`) that sits at the very
 front of the network pipeline. It peeks at the opening bytes to see if a PROXY header is there, and
@@ -121,9 +137,9 @@ real client (the PROXY LOCAL command) are recognized and left alone.
 
 It's a dedicated-server-only mod, so it never touches singleplayer or LAN worlds.
 
-If you want the file-by-file detail, the classes are small and commented: `ProxyProtocolDetector`,
-`ProxyProtocolHandler`, `ServerConnectionListenerMixin`, `ConnectionMixin`, `CidrRange`, and
-`HAProxyCompatConfig`.
+The core logic (`ProxyProtocolDetector`, `ProxyProtocolHandler`, mixins) is shared between both
+loaders. NeoForge uses `ModConfigSpec` for live-reloading config; Fabric reads `haproxycompat.json`
+at startup.
 
 ## License
 
