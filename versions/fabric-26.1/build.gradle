@@ -89,6 +89,13 @@ tasks.withType(JavaCompile).configureEach {
     options.release = 25
 }
 
+def gitChangelog = { ->
+    try {
+        def prevTag = ["git", "describe", "--tags", "--abbrev=0", "HEAD^"].execute().text.trim()
+        return prevTag ? ["git", "log", "--pretty=format:* %s", "${prevTag}..HEAD"].execute().text.trim() : ""
+    } catch (ignored) { return "" }
+}()
+
 modrinth {
     token = System.getenv("MODRINTH_TOKEN")
     projectId = "haproxycompat"
@@ -98,4 +105,5 @@ modrinth {
     uploadFile = remapJar
     gameVersions = ["26.1", "26.1.1", "26.1.2"]
     loaders = ["fabric"]
+    changelog = gitChangelog
 }
