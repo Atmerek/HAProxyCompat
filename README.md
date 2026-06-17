@@ -24,10 +24,12 @@ extra setup for players.
 
 | File | Loader | MC versions |
 |---|---|---|
-| `haproxycompat-neoforge-1.21-1.0.0.jar` | NeoForge | 1.21 – 1.21.11 |
-| `haproxycompat-neoforge-26.1-1.0.0.jar` | NeoForge | 26.1.x |
-| `haproxycompat-fabric-1.21-1.0.0.jar` | Fabric | 1.21 – 1.21.11 |
-| `haproxycompat-fabric-26.1-1.0.0.jar` | Fabric | 26.1.x |
+| `haproxycompat-neoforge-1.21-1.0.1.jar` | NeoForge | 1.21 – 1.21.11 |
+| `haproxycompat-neoforge-26.1-1.0.1.jar` | NeoForge | 26.1.x |
+| `haproxycompat-neoforge-26.2-1.0.1.jar` | NeoForge | 26.2.x |
+| `haproxycompat-fabric-1.21-1.0.1.jar` | Fabric | 1.21 – 1.21.11 |
+| `haproxycompat-fabric-26.1-1.0.1.jar` | Fabric | 26.1.x |
+| `haproxycompat-fabric-26.2-1.0.1.jar` | Fabric | 26.2.x |
 
 ## Quick start
 
@@ -106,15 +108,18 @@ HAProxyCompat only listens. Your proxy still has to be told to **send** the head
 
 ## Build from source
 
-You need JDK 21 for 1.21.x builds, JDK 25 for 26.1.x (Gradle downloads the right one automatically
-via toolchains for the NeoForge builds; Fabric 26.1 requires JDK 25 to run Gradle itself).
+You need JDK 21 for 1.21.x builds, JDK 25 for 26.1.x/26.2.x (Gradle downloads the right one
+automatically via toolchains for the NeoForge builds; Fabric 26.1/26.2 require JDK 25 to run Gradle
+itself).
 
 ```bat
 gradlew.bat :neoforge-1.21:build
 gradlew.bat :neoforge-26.1:build
+gradlew.bat :neoforge-26.2:build
 gradlew.bat :fabric-1.21:build
 :: Requires JDK 25:
 gradlew.bat :fabric-26.1:build
+gradlew.bat :fabric-26.2:build
 ```
 
 Jars land in `versions/<subproject>/build/libs/`.
