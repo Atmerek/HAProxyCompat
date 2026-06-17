@@ -1,0 +1,109 @@
+plugins {
+    id 'java'
+    id 'fabric-loom' version '1.17.1'
+    id 'com.modrinth.minotaur' version '2.9.0'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = "${mod_id}-${mod_loader}-${mc_label}"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+repositories {
+    maven { url = 'https://maven.fabricmc.net/' }
+}
+
+loom {
+    // MC 26.2.x is open-source: no proguard mappings, no Intermediary, no Yarn yet.
+    // The server jar already uses public class names; disable the intermediary remapping step.
+    noIntermediateMappings()
+}
+
+// Generate a minimal Tiny v2 identity-mappings.jar at evaluation time so the file exists
+// when Loom resolves the `mappings` configuration in afterEvaluate.
+// No class entries = identity (every official name stays as the named name).
+// Guard with !exists() so Loom's cache is not invalidated on every incremental run.
+def identityMappingsJar = layout.buildDirectory.file('identity-mappings.jar').get().asFile
+if (!identityMappingsJar.exists()) {
+    identityMappingsJar.parentFile.mkdirs()
+    new java.util.zip.ZipOutputStream(identityMappingsJar.newOutputStream()).withCloseable { zip ->
+        zip.putNextEntry(new java.util.zip.ZipEntry('mappings/'))
+        zip.closeEntry()
+        zip.putNextEntry(new java.util.zip.ZipEntry('mappings/mappings.tiny'))
+        zip.write("tiny\t2\t0\tofficial\tnamed\n".getBytes('UTF-8'))
+        zip.closeEntry()
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = [
+                rootProject.file('src/common/main/java'),
+                rootProject.file('src/fabric/main/java')
+            ]
+        }
+        resources {
+            srcDirs = [
+                rootProject.file('src/common/main/resources'),
+                rootProject.file('src/fabric/main/resources')
+            ]
+        }
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings files(identityMappingsJar)
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    include(implementation("io.netty:netty-codec-haproxy:${netty_version}"))
+}
+
+processResources {
+    var replaceProperties = [
+        mod_id                     : mod_id,
+        mod_version                : mod_version,
+        mod_name                   : mod_name,
+        mod_license                : mod_license,
+        mod_authors                : mod_authors,
+        mod_description            : mod_description,
+        fabric_loader_version_range: fabric_loader_version_range,
+        fabric_minecraft_range     : fabric_minecraft_range
+    ]
+    inputs.properties replaceProperties
+    filesMatching('fabric.mod.json') {
+        expand replaceProperties
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 25
+}
+
+def gitChangelog = { ->
+    try {
+        def prevTag = ["git", "describe", "--tags", "--abbrev=0", "HEAD^"].execute().text.trim()
+        return prevTag ? ["git", "log", "--pretty=format:* %s", "${prevTag}..HEAD"].execute().text.trim() : ""
+    } catch (ignored) { return "" }
+}()
+
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = "haproxycompat"
+    versionNumber = "${project.version}+${mod_loader}-${mc_label}"
+    versionName = project.version
+    versionType = "release"
+    uploadFile = remapJar
+    gameVersions = ["26.2"]
+    loaders = ["fabric"]
+    changelog = gitChangelog
+}

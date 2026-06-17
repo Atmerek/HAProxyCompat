@@ -16,9 +16,13 @@ jobs:
             java-version: '21'
           - subproject: neoforge-26.1
             java-version: '21'
+          - subproject: neoforge-26.2
+            java-version: '21'
           - subproject: fabric-1.21
             java-version: '21'
           - subproject: fabric-26.1
+            java-version: '25'
+          - subproject: fabric-26.2
             java-version: '25'
 
     steps:

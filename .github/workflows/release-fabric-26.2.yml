@@ -1,0 +1,44 @@
+name: Release (Fabric 26.2.x)
+
+on:
+  push:
+    tags: [ 'v*-fabric-26.2' ]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build
+        run: ./gradlew :fabric-26.2:build --no-daemon --stacktrace
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ github.ref_name }}"
+          JAR=$(ls versions/fabric-26.2/build/libs/*.jar | grep -v '\-dev\.' | grep -v '\-sources\.' | head -1)
+          gh release create "$TAG" "$JAR" \
+            --title "$TAG" \
+            --generate-notes \
+            || gh release upload "$TAG" "$JAR" --clobber
+
+      - name: Publish to Modrinth
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: ./gradlew :fabric-26.2:modrinth --no-daemon

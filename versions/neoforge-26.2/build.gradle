@@ -1,0 +1,111 @@
+plugins {
+    id 'java'
+    id 'idea'
+    id 'net.neoforged.moddev' version '2.0.141'
+    id 'com.modrinth.minotaur' version '2.9.0'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = "${mod_id}-${mod_loader}-${mc_label}"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = [
+                rootProject.file('src/common/main/java'),
+                rootProject.file('src/neoforge/main/java')
+            ]
+        }
+        resources {
+            srcDirs = [
+                rootProject.file('src/common/main/resources'),
+                rootProject.file('src/neoforge/main/resources')
+            ]
+        }
+    }
+}
+
+neoForge {
+    version = project.neo_version
+
+    runs {
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'forge.logging.console.level', 'debug'
+            gameDirectory = file('run')
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+dependencies {
+    jarJar(implementation("io.netty:netty-codec-haproxy:${netty_version}")) {
+        version {
+            strictly "[${netty_version},4.2.0)"
+            prefer netty_version
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 25
+}
+
+var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
+    var replaceProperties = [
+        minecraft_version      : minecraft_version,
+        minecraft_version_range: minecraft_version_range,
+        neo_version            : neo_version,
+        neo_version_range      : neo_version_range,
+        loader_version_range   : loader_version_range,
+        mod_id                 : mod_id,
+        mod_name               : mod_name,
+        mod_license            : mod_license,
+        mod_version            : mod_version,
+        mod_authors            : mod_authors,
+        mod_description        : mod_description
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from rootProject.file('src/neoforge/main/templates')
+    into "${layout.buildDirectory.get()}/generated/sources/modMetadata"
+}
+
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+
+def gitChangelog = { ->
+    try {
+        def prevTag = ["git", "describe", "--tags", "--abbrev=0", "HEAD^"].execute().text.trim()
+        return prevTag ? ["git", "log", "--pretty=format:* %s", "${prevTag}..HEAD"].execute().text.trim() : ""
+    } catch (ignored) { return "" }
+}()
+
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = "haproxycompat"
+    versionNumber = "${project.version}+${mod_loader}-${mc_label}"
+    versionName = project.version
+    versionType = "release"
+    uploadFile = jar
+    gameVersions = ["26.2"]
+    loaders = ["neoforge"]
+    changelog = gitChangelog
+}
